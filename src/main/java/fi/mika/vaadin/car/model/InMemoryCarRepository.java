@@ -19,11 +19,12 @@ public class InMemoryCarRepository implements CarRepository {
     private AtomicLong idGenerator = new AtomicLong();
 
     @Override
-    public void create(Car car) {
+    public Long create(Car car) {
         car = ImmutableCar.builder().from(car).id(idGenerator.incrementAndGet()).build();
         Objects.requireNonNull(car.id(), "Car.id cannot be null when saving");
         cars.put(car.id(), car);
         log.debug("Car created: {}", car);
+        return car.id();
     }
 
     @Override

@@ -2,6 +2,7 @@ package fi.mika.vaadin.car.view;
 
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.ItemDoubleClickEvent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -14,6 +15,7 @@ import fi.mika.vaadin.car.model.CarRepository;
 import fi.mika.vaadin.car.model.ModifiableCar;
 import fi.mika.vaadin.config.Spring;
 
+import java.util.List;
 import java.util.Set;
 
 @Route("")
@@ -56,8 +58,8 @@ public class CarView extends VerticalLayout {
         grid = new Grid<>();
         grid.addColumn(Car::make).setHeader("Make");
         grid.addColumn(Car::model).setHeader("Model");
-        grid.addColumn(Car::licenseNumber).setHeader("Lisence number");
-        grid.addColumn(Car::price).setHeader("Price");
+        grid.addColumn(Car::licenseNumber).setHeader("License number");
+        grid.addColumn(Car::price).setHeader("Price").setTextAlign(ColumnTextAlign.END);
 
         grid.addItemDoubleClickListener(this::onItemDoubleClick);
     }
@@ -80,27 +82,36 @@ public class CarView extends VerticalLayout {
     }
 
     private void onSaveNew(ModifiableCar modifiableCar) {
-        carRepository.create(modifiableCar);
-        reloadData();
+        Long id = carRepository.create(modifiableCar);
+        reloadData(id);
         grid.focus();
     }
 
     private void onSaveExisting(ModifiableCar modifiableCar) {
         carRepository.update(modifiableCar);
-        reloadData();
+        reloadData(modifiableCar.id());
         grid.focus();
     }
 
-    private void reloadData() {
-        dataProvider = DataProvider.ofCollection(carRepository.readAll());
+    private void reloadData(Long id) {
+        List<Car> rows = carRepository.readAll();
+        dataProvider = DataProvider.ofCollection(rows);
         grid.setDataProvider(dataProvider);
+        if (id == null && !rows.isEmpty()) {
+            id = rows.get(0).id();
+        }
+        if (id != null) {
+            final Long selectId = id;
+            Car selected = rows.stream().filter(car -> car.id().compareTo(selectId) == 0).findFirst().orElse(null);
+            grid.select(selected);
+        }
     }
 
     private void onDeleteButtonClick(ClickEvent<Button> buttonClickEvent) {
         for (Car selectedItem : grid.getSelectedItems()) {
             carRepository.delete(selectedItem);
         }
-        reloadData();
+        reloadData(null);
     }
 
     private void onItemDoubleClick(ItemDoubleClickEvent<Car> carItemDoubleClickEvent) {
