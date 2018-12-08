@@ -3,12 +3,9 @@ package fi.mika.vaadin.config;
 import com.vaadin.flow.di.Instantiator;
 import com.vaadin.flow.function.DeploymentConfiguration;
 import com.vaadin.flow.server.ServiceException;
-import com.vaadin.flow.server.SessionDestroyListener;
 import com.vaadin.flow.server.VaadinServlet;
 import com.vaadin.flow.server.VaadinServletService;
-import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WebBrowser;
-import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.AbstractTheme;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
@@ -20,32 +17,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * This is simplified version from spring-vaadin project.
+ */
 public class SpringVaadinServletService extends VaadinServletService {
-
     private final transient ApplicationContext context;
 
-    private final Registration serviceDestroyRegistration;
-
-    /**
-     * Creates an instance connected to the given servlet and using the given
-     * configuration with provided application {@code context}.
-     *
-     * @param servlet
-     *         the servlet which receives requests
-     * @param deploymentConfiguration
-     *         the configuration to use
-     * @param context
-     *         the Spring application context
-     */
     public SpringVaadinServletService(VaadinServlet servlet,
                                       DeploymentConfiguration deploymentConfiguration,
                                       ApplicationContext context) {
         super(servlet, deploymentConfiguration);
         this.context = context;
-        SessionDestroyListener listener = event -> sessionDestroyed(event.getSession());
-        Registration registration = addSessionDestroyListener(listener);
-        serviceDestroyRegistration = addServiceDestroyListener(
-                event -> serviceDestroyed(registration));
     }
 
     @Override
@@ -64,34 +46,8 @@ public class SpringVaadinServletService extends VaadinServletService {
                             + " and Spring instantiator beans: "
                             + springInstantiators);
         }
-        if (!spiInstantiator.isPresent() && springInstantiators.isEmpty()) {
-            /*
-            Instantiator defaultInstantiator = new SpringInstantiator(this, context);
-            defaultInstantiator.init(this);
-            return Optional.of(defaultInstantiator);
-            */
-        }
         return spiInstantiator.isPresent() ? spiInstantiator
                 : springInstantiators.stream().findFirst();
-    }
-
-    /*
-    @Override
-    protected VaadinSession createVaadinSession(VaadinRequest request) {
-        return new SpringVaadinSession(this);
-    }
-    */
-
-    private void sessionDestroyed(VaadinSession session) {
-        /*
-        assert session instanceof SpringVaadinSession;
-        ((SpringVaadinSession) session).fireSessionDestroy();
-        */
-    }
-
-    private void serviceDestroyed(Registration registration) {
-        registration.remove();
-        serviceDestroyRegistration.remove();
     }
 
     @Override

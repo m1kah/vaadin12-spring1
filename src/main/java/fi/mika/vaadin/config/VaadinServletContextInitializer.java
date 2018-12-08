@@ -1,7 +1,6 @@
 package fi.mika.vaadin.config;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.router.HasErrorParameter;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.InvalidRouteConfigurationException;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.ServletContext;
@@ -28,14 +26,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Collections.singletonList;
-
+/**
+ * This is simplified context initialier from vaadin-spring project.
+ */
 public class VaadinServletContextInitializer implements ServletContextInitializer {
     private static final Logger log = LoggerFactory.getLogger(VaadinServletContextInitializer.class);
     private final WebApplicationContext appContext;
+    private final List<String> vaadinPackages;
 
-    public VaadinServletContextInitializer(WebApplicationContext appContext) {
+    public VaadinServletContextInitializer(WebApplicationContext appContext, List<String> vaadinPackages) {
         this.appContext = appContext;
+        this.vaadinPackages = vaadinPackages;
         Spring.setApplicationContext(appContext);
     }
 
@@ -48,7 +49,7 @@ public class VaadinServletContextInitializer implements ServletContextInitialize
     }
 
     private class RouteServletContextListener extends AbstractRouteRegistryInitializer implements ServletContextListener {
-
+        @SuppressWarnings("unchecked")
         @Override
         public void contextInitialized(ServletContextEvent event) {
             RouteRegistry registry = RouteRegistry.getInstance(event.getServletContext());
@@ -56,7 +57,7 @@ public class VaadinServletContextInitializer implements ServletContextInitialize
                 return;
             }
             List<Class<?>> routeClasses = findByAnnotation(
-                    getRoutePackages(),
+                    vaadinPackages,
                     Route.class,
                     RouteAlias.class)
                     .collect(Collectors.toList());
@@ -109,17 +110,6 @@ public class VaadinServletContextInitializer implements ServletContextInitialize
                 .flatMap(Collection::stream).map(this::getBeanClass);
     }
 
-    private Stream<Class<?>> findBySuperType(Collection<String> packages,
-                                             Class<?> type) {
-        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(
-                false);
-        scanner.setResourceLoader(appContext);
-        scanner.addIncludeFilter(new AssignableTypeFilter(type));
-
-        return packages.stream().map(scanner::findCandidateComponents)
-                .flatMap(set -> set.stream()).map(this::getBeanClass);
-    }
-
     private Class<?> getBeanClass(BeanDefinition beanDefinition) {
         AbstractBeanDefinition definition = (AbstractBeanDefinition) beanDefinition;
         Class<?> beanClass;
@@ -136,27 +126,4 @@ public class VaadinServletContextInitializer implements ServletContextInitialize
         return beanClass;
     }
 
-    private Collection<String> getRoutePackages() {
-        return getDefaultPackages();
-    }
-
-    private Collection<String> getCustomElementPackages() {
-        return getDefaultPackages();
-    }
-
-    private Collection<String> getVerifiableAnnotationPackages() {
-        return getDefaultPackages();
-    }
-
-    private Collection<String> getErrorParameterPackages() {
-        return Stream
-                .concat(Stream
-                                .of(HasErrorParameter.class.getPackage().getName()),
-                        getDefaultPackages().stream())
-                .collect(Collectors.toSet());
-    }
-
-    private List<String> getDefaultPackages() {
-        return singletonList("fi.mika.vaadin.car");
-    }
 }

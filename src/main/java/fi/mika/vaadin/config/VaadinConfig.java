@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.ServletForwardingController;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -25,9 +26,12 @@ public class VaadinConfig {
     @Value("${app.vaadinContextPath}")
     String vaadinPath;
 
+    @Value("${app.vaadinPackages}")
+    List<String> vaadinPackages;
+
     @Bean
     ServletContextInitializer contextInitializer(WebApplicationContext context) {
-        return new VaadinServletContextInitializer(context);
+        return new VaadinServletContextInitializer(context, vaadinPackages);
     }
 
     @Bean

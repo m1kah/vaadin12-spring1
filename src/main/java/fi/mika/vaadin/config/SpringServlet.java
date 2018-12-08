@@ -13,7 +13,6 @@ import java.io.IOException;
 
 public class SpringServlet extends VaadinServlet {
     private final ApplicationContext context;
-    private final boolean forwardingEnforced = true;
 
     public SpringServlet(ApplicationContext context) {
         this.context = context;
@@ -31,17 +30,14 @@ public class SpringServlet extends VaadinServlet {
     }
 
     @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void service(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         super.service(wrapRequest(request), response);
     }
 
     private HttpServletRequest wrapRequest(HttpServletRequest request) {
-        if (forwardingEnforced && request.getPathInfo() == null) {
-            /*
-             * We need to apply a workaround in case of forwarding
-             *
-             * see https://jira.spring.io/browse/SPR-17457
-             */
+        // We need to fix path info in same way as vaadin-spring project is doing
+        if (request.getPathInfo() == null) {
             return new ForwardingRequestWrapper(request);
         }
         return request;

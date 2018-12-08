@@ -5,6 +5,9 @@ import org.springframework.web.util.UrlPathHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
+/**
+ * Sets pathInfo for requests. See vaadin-spring github for more details.
+ */
 public class ForwardingRequestWrapper extends HttpServletRequestWrapper {
     private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
@@ -16,8 +19,6 @@ public class ForwardingRequestWrapper extends HttpServletRequestWrapper {
     public String getServletPath() {
         String pathInfo = super.getPathInfo();
         if (pathInfo == null) {
-            // the path where a ServletForwardingController is registered is not
-            // a real servlet path
             return "";
         } else {
             return super.getServletPath();
@@ -28,8 +29,6 @@ public class ForwardingRequestWrapper extends HttpServletRequestWrapper {
     public String getPathInfo() {
         String pathInfo = super.getPathInfo();
         if (pathInfo == null) {
-            // this uses getServletPath() and should work both with and without
-            // clearServletPath
             pathInfo = urlPathHelper.getPathWithinServletMapping(this);
         }
         return pathInfo;
