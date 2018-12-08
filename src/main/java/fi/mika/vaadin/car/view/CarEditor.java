@@ -6,13 +6,14 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import fi.mika.vaadin.car.model.ModifiableCar;
 
 import java.util.function.Consumer;
 
-public class CarEditor extends FormLayout {
+public class CarEditor extends VerticalLayout {
     Binder<ModifiableCar> binder;
     private TextField makeField;
     private TextField modelField;
@@ -28,6 +29,7 @@ public class CarEditor extends FormLayout {
     }
 
     private void initLayout() {
+        setMargin(true);
         makeField = new TextField("Make");
         modelField = new TextField("Model");
         licenseNumberField = new TextField("License number");
@@ -40,14 +42,14 @@ public class CarEditor extends FormLayout {
         HorizontalLayout buttonBar = new HorizontalLayout(saveButton, cancelButton);
         buttonBar.setMargin(true);
 
-        add(
+        add(new FormLayout(
                 makeField,
                 modelField,
                 licenseNumberField,
                 firstRegistrationField,
                 receivedField,
                 priceField,
-                buttonBar);
+                buttonBar));
     }
 
     private void onSaveButtonClick(ClickEvent<Button> buttonClickEvent) {

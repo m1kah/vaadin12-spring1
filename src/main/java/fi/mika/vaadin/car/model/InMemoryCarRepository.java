@@ -20,7 +20,9 @@ public class InMemoryCarRepository implements CarRepository {
 
     @Override
     public void create(Car car) {
-        cars.put(idGenerator.incrementAndGet(), car);
+        car = ImmutableCar.builder().from(car).id(idGenerator.incrementAndGet()).build();
+        Objects.requireNonNull(car.id(), "Car.id cannot be null when saving");
+        cars.put(car.id(), car);
         log.debug("Car created: {}", car);
     }
 
