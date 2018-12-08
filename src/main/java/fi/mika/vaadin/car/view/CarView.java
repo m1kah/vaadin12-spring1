@@ -9,6 +9,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.router.Route;
 import fi.mika.vaadin.car.model.Car;
 import fi.mika.vaadin.car.model.CarRepository;
@@ -59,7 +60,10 @@ public class CarView extends VerticalLayout {
         grid.addColumn(Car::make).setHeader("Make");
         grid.addColumn(Car::model).setHeader("Model");
         grid.addColumn(Car::licenseNumber).setHeader("License number");
-        grid.addColumn(Car::price).setHeader("Price").setTextAlign(ColumnTextAlign.END);
+        grid.addColumn(new NumberRenderer<>(Car::price, "%(,.2f"))
+                .setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .getRenderer();
 
         grid.addItemDoubleClickListener(this::onItemDoubleClick);
     }
