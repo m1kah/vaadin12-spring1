@@ -11,6 +11,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import fi.mika.vaadin.car.model.ModifiableCar;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.function.Consumer;
 
 public class CarEditor extends VerticalLayout {
@@ -31,10 +33,12 @@ public class CarEditor extends VerticalLayout {
     private void initLayout() {
         setMargin(true);
         makeField = new TextField("Make");
+        makeField.setRequired(true);
         modelField = new TextField("Model");
+        modelField.setRequired(true);
         licenseNumberField = new TextField("License number");
+        licenseNumberField.setRequired(true);
         firstRegistrationField = new DatePicker("First registered");
-        receivedField = new DatePicker("Received");
         priceField = new TextField("Price");
 
         Button saveButton = new Button("Save", this::onSaveButtonClick);
@@ -47,7 +51,6 @@ public class CarEditor extends VerticalLayout {
                 modelField,
                 licenseNumberField,
                 firstRegistrationField,
-                receivedField,
                 priceField,
                 buttonBar));
     }
@@ -76,12 +79,34 @@ public class CarEditor extends VerticalLayout {
 
     private void initBinder() {
         binder = new Binder<>(ModifiableCar.class);
-        binder.forField(makeField).bind(ModifiableCar::make, ModifiableCar::setMake);
-        binder.forField(modelField).bind(ModifiableCar::model, ModifiableCar::setModel);
-        binder.forField(licenseNumberField).bind(ModifiableCar::licenseNumber, ModifiableCar::setLicenseNumber);
-        binder.forField(firstRegistrationField).bind(ModifiableCar::firstRegistration, ModifiableCar::setFirstRegistration);
-        //binder.forField(receivedField).bind(CarViewModel::getReceived, CarViewModel::setReceived);
-        //binder.forField(priceField).bind(CarViewModel::getPrice, CarViewModel::setPrice);
+        binder.forField(makeField)
+                .withValidator(
+                        make -> make != null && make.length() >= 3,
+                        "Make must be given. Min length is 3.")
+                .bind(ModifiableCar::make, ModifiableCar::setMake);
+        binder.forField(modelField)
+                .withValidator(
+                        model -> model != null && model.length() >= 1,
+                        "Model must be given. Min length is 1.")
+                .bind(ModifiableCar::model, ModifiableCar::setModel);
+        binder.forField(licenseNumberField)
+                .withConverter(new CapitalizingConverter())
+                .withValidator(
+                        licenseNumber -> licenseNumber != null && licenseNumber.matches("[A-Za-z]{3}-[0-9]{3}"),
+                        "License number must be in format: ABC-123")
+                .bind(ModifiableCar::licenseNumber, ModifiableCar::setLicenseNumber);
+        binder.forField(firstRegistrationField)
+                .withValidator(
+                        date -> date == null || !date.isAfter(LocalDate.now()),
+                        "Date cannot be in future")
+                .bind(ModifiableCar::firstRegistration, ModifiableCar::setFirstRegistration);
+        binder.forField(priceField)
+                .withConverter(new PriceConverter())
+                .withValidator(
+                        price -> price == null || price.compareTo(BigDecimal.ZERO) > 0,
+                        "Price must be greater than 0.00"
+                )
+                .bind(ModifiableCar::price, ModifiableCar::setPrice);
     }
 
     public void edit(ModifiableCar value, Consumer<ModifiableCar> saveListener) {
